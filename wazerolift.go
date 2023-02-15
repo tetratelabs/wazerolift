@@ -23,11 +23,13 @@ func ConfigureCranelift(config wazero.RuntimeConfig) {
 		panic("BUG: invalid configuration was given")
 	}
 
-	// This corresponds to the unexported wazero.compiledModule to get *wasm.Module from wazero.CompiledModule interface.
+	// This corresponds to the unexported wazero.runtimeConfig, and set the target field newEngineExt exists
+	// at the beginning of the implementation. That assumption is ensured by wazero's unit test.
 	type newEngineExt func(context.Context, api.CoreFeatures, any) engineext.EngineExt
 	type runtimeConfig struct {
 		newEngineExt
 	}
 	cm := (*runtimeConfig)(configInterface.data)
+	// Insert the cranelift implementation.
 	cm.newEngineExt = cranelift.NewEngine
 }
