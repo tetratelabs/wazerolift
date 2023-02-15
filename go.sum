@@ -14,6 +14,8 @@ github.com/tetratelabs/wabin v0.0.0-20220927005300-3b0fbf39a46a h1:P0R3+CTAT7daT
 github.com/tetratelabs/wabin v0.0.0-20220927005300-3b0fbf39a46a/go.mod h1:m9ymHTgNSEjuxvw8E7WWe4Pl4hZQHXONY8wE6dMLaRk=
 github.com/tetratelabs/wazero v1.0.0-pre.8.0.20230215064837-82e5c6316ff3 h1:mpwMi46wvQz8rE7byjc4gzZLEdkak9HZIrPPpbEJWOg=
 github.com/tetratelabs/wazero v1.0.0-pre.8.0.20230215064837-82e5c6316ff3/go.mod h1:wYx2gNRg8/WihJfSDxA1TIL8H+GkfLYm+bIfbblu9VQ=
+github.com/tetratelabs/wazero v1.0.0-pre.8.0.20230215075431-3b4a92637fb0 h1:vRtRDPqcdxs4K5fcIrmvxULYyc2HAtgY+5wD914pgOE=
+github.com/tetratelabs/wazero v1.0.0-pre.8.0.20230215075431-3b4a92637fb0/go.mod h1:wYx2gNRg8/WihJfSDxA1TIL8H+GkfLYm+bIfbblu9VQ=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=

@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/tetratelabs/wabin v0.0.0-20220927005300-3b0fbf39a46a
-	github.com/tetratelabs/wazero v1.0.0-pre.8.0.20230215064837-82e5c6316ff3
+	github.com/tetratelabs/wazero v1.0.0-pre.8.0.20230215075431-3b4a92637fb0
 )
 
 require (
