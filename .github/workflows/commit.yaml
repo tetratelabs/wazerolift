@@ -1,0 +1,117 @@
+name: Test
+on:
+  pull_request:
+    branches: [main]
+    paths-ignore:  # ignore docs as they are built with Netlify.
+      - '**/*.md'
+      - 'site/**'
+      - 'netlify.toml'
+  push:
+    branches: [main]
+    paths-ignore:  # ignore docs as they are built with Netlify.
+      - '**/*.md'
+      - 'site/**'
+      - 'netlify.toml'
+
+env:  # Update this prior to requiring a higher minor version in go.mod
+  GO_VERSION: "1.19"  # 1.xx == latest patch of 1.xx
+
+defaults:
+  run:  # use bash for all operating systems unless overridden
+    shell: bash
+
+concurrency:
+  # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-concurrency-to-cancel-any-in-progress-job-or-run
+  group: ${{ github.ref }}-${{ github.workflow }}-${{ github.actor }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Pre-commit check
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/.cache/golangci-lint
+            ~/go/pkg/mod
+            ~/go/bin
+          key: check-${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum', 'Makefile') }}
+
+      - run: make check
+
+  test_amd64:
+    name: amd64, ${{ matrix.os }}, Go-${{ matrix.go-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false  # don't fail fast as sometimes failures are arch/OS specific
+      matrix:  # Use versions consistent with wazero's Go support policy.
+        os: [ubuntu-20.04, macos-12, windows-2022]
+        go-version:
+          - "1.20"  # Current Go version
+          - "1.18"  # Floor Go version of wazero (current - 2)
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go-version }}
+          cache: true
+
+      - run: make test
+
+  test_scratch:
+    name: ${{ matrix.arch }}, Linux (scratch), Go-${{ matrix.go-version }}
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false # don't fail fast as sometimes failures are arch/OS specific
+      matrix: # Use versions consistent with wazero's Go support policy.
+        go-version:
+          - "1.20"  # Current Go version
+          - "1.18"  # Floor Go version of wazero (current - 2)
+        arch:
+          - "amd64"
+          - "arm64"
+
+    steps:
+
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go-version }}
+          cache: true
+
+      - name: Build test binaries
+        # Exclude benchmarks as we don't run those in Docker
+        run: |
+          go list -f '{{.Dir}}' ./... | egrep -v '(bench|vs|spectest)' | xargs -Ipkg go test pkg -c -o pkg.test
+        env:
+          GOARCH: ${{ matrix.arch }}
+          CGO_ENABLED: 0
+
+      - name: Set up QEMU
+        if: ${{ matrix.arch != 'amd64' }}
+        uses: docker/setup-qemu-action@v2
+        with:  # Avoid docker.io rate-limits; built with internal-images.yml
+          image: ghcr.io/tetratelabs/wazero/internal-binfmt
+          platforms: ${{ matrix.arch }}
+
+      - name: Build scratch container
+        run: |
+          echo 'FROM scratch' >> Dockerfile
+          echo 'CMD ["/test"]' >> Dockerfile
+          docker buildx build -t wazero:test --platform linux/${{ matrix.arch }} .
+
+      - name: Run built test binaries
+        # This runs all tests compiled above in sequence. Note: This mounts /tmp to allow t.TempDir() in tests.
+        run: find . -name "*.test" | xargs -Itestbin docker run --platform linux/${{ matrix.arch }} -v $(pwd)/testbin:/test --tmpfs /tmp --rm -t wazero:test

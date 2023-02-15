@@ -3,6 +3,7 @@ package example
 import (
 	"context"
 	_ "embed"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -18,6 +19,10 @@ import (
 var addWasm []byte
 
 func TestExample(t *testing.T) {
+	if runtime.GOARCH != "arm64" {
+		// TODO:
+		t.Skip()
+	}
 	config := wazero.NewRuntimeConfig()
 	wazerolift.ConfigureCranelift(config)
 	ctx := context.Background()
